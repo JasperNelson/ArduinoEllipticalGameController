@@ -10,6 +10,13 @@ int encoderPosition = 0;
 int previousEncoderPinA = LOW; // Low voltage value
 int currentEncoderPinA = LOW;
 
+// whenever current repeats charachter is not zero than you need to repeat not echoing to they keyboard until it reaches zero. 
+int currentRepeats = 0;
+
+// charachter that is going to be repeated or not repeated by the state of the encoder. 
+char currentRepeatsChar = '\0';
+
+
 const int quadratureEncoderRepeats = 5;
 
 // Potentiometer setup
@@ -36,19 +43,37 @@ void loop() {
       // We've detected a pulse change.  Read the next pin to find the pulse direction.      
       if (digitalRead(encoderPinB) == LOW) {
         encoderPosition--;
-        for (int j = 0; j < quadratureEncoderRepeats; ++j) {
-          Keyboard.press('s');        
+
+        // If we were repeating something, stop that first.
+        if (currentRepeatsChar != '\0') {
+          Keyboard.release(currentRepeatsChar);
         }
-        Keyboard.release('s');
+        
+        currentRepeatsChar = 's';
       } else {
         encoderPosition++;
-        for (int j = 0; j < quadratureEncoderRepeats; ++j) {
-          Keyboard.press('w');
+
+        // If we were repeating something, stop that first.
+        if (currentRepeatsChar != '\0') {
+          Keyboard.release(currentRepeatsChar);
         }
-        Keyboard.release('w');
+       
+        currentRepeatsChar = 'w';
       }
     }
     previousEncoderPinA = currentEncoderPinA;
+
+    // Handle repeat mode.
+    if (currentRepeatsChar != '\0') {
+      Keyboard.press(currentRepeatsChar);
+      currentRepeats++;
+      if (currentRepeats == quadratureEncoderRepeats) {
+        // done with repeat mode
+        Keyboard.release(currentRepeatsChar);
+        currentRepeatsChar = '\0';
+        currentRepeats=0;       
+      }
+    }
 
     // Potentiometer handling ("a" and "d").
     
